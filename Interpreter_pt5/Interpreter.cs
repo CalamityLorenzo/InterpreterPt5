@@ -45,41 +45,33 @@ namespace Interpreter_pt3
                 _currentToken = this.Lexer.GetNextToken();
             }
             var token = this._currentToken;
-            this.Eat(TokenType.Integer);
-            return int.Parse(token.Value);
-        }
-
-
-        int Parens()
-        {
-            _currentToken = this.Lexer.GetNextToken();
-            if (MathsOperators.IsParens(_currentToken.TokenType))
+            if (token.TokenType == TokenType.Integer)
             {
-                // opening
-                if(_currentToken.TokenType == TokenType.LeftParens)
+                this.Eat(TokenType.Integer);
+                return int.Parse(token.Value);
+            }
+            else {
+                if (token.TokenType == TokenType.LeftParens)
                 {
-                    return this.Term();
-                }
-                else //closing
-                {
-                    return this.Factor();
+                    this.Eat(TokenType.LeftParens);
+                    var result = this.Expr();
+                    this.Eat(TokenType.RightParens);
+                    return result;
                 }
             }
-            else
-            {
-                return this.Factor();
-            }
 
+            throw new ArgumentException($"No factor found, {_currentToken.TokenType}");
         }
+
 
         int Term()
         {
-            var result = this.Parens();
+            var result = this.Factor();
             while (MathsOperators.IsMultDiv(_currentToken.TokenType))
             {
                 Token operation = _currentToken;
                 this.Eat(operation.TokenType);
-                result = MathsOperators.Operate(operation.TokenType, result, this.Parens());
+                result = MathsOperators.Operate(operation.TokenType, result, this.Factor());
             }
             return result;
         }
